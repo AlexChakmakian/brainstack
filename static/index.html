@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainStack - Flashcard Learning App</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧠 BrainStack</h1>
+            <p>Master your knowledge with flashcards</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+            <button class="nav-btn" data-page="study">Study</button>
+            <button class="nav-btn" data-page="progress">Progress</button>
+        </nav>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="page-header">
+                <h2>Your Decks</h2>
+                <button class="btn btn-primary" id="createDeckBtn">+ Create New Deck</button>
+            </div>
+            
+            <div id="decksList" class="decks-grid">
+                <!-- Decks will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Study Page -->
+        <div id="study" class="page">
+            <div class="page-header">
+                <h2>Study Mode</h2>
+                <select id="studyDeckSelect" class="select">
+                    <option value="">Select a deck to study</option>
+                </select>
+            </div>
+            
+            <div id="studyContent" class="study-content">
+                <div class="study-card" id="studyCard">
+                    <div class="card-side" id="cardFront">
+                        <h3>Select a deck to start studying</h3>
+                        <p>Choose a deck from the dropdown above</p>
+                    </div>
+                    <div class="card-side hidden" id="cardBack">
+                        <h3>Answer</h3>
+                        <p id="cardAnswer"></p>
+                    </div>
+                </div>
+                
+                <div class="study-controls">
+                    <button class="btn btn-secondary" id="flipCardBtn" disabled>Flip Card</button>
+                    <button class="btn btn-primary" id="nextCardBtn" disabled>Next Card</button>
+                </div>
+                
+                <div class="study-feedback">
+                    <button class="btn btn-success" id="correctBtn" disabled>✓ Correct</button>
+                    <button class="btn btn-danger" id="incorrectBtn" disabled>✗ Incorrect</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Page -->
+        <div id="progress" class="page">
+            <div class="page-header">
+                <h2>Your Progress</h2>
+            </div>
+            
+            <div id="progressContent">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Overall Stats</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Cards Studied:</span>
+                            <span class="stat-value" id="totalCardsStudied">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Accuracy:</span>
+                            <span class="stat-value" id="overallAccuracy">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Study Sessions:</span>
+                            <span class="stat-value" id="totalSessions">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Deck Statistics</h3>
+                        <div id="deckStats">
+                            <!-- Deck stats will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deck Editor Modal -->
+        <div id="deckModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Create New Deck</h3>
+                    <button class="close-btn" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="deckForm">
+                        <div class="form-group">
+                            <label for="deckName">Deck Name</label>
+                            <input type="text" id="deckName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="deckDescription">Description (optional)</label>
+                            <textarea id="deckDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelDeck">Cancel</button>
+                    <button class="btn btn-primary" id="saveDeck">Save Deck</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Editor Modal -->
+        <div id="cardModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="cardModalTitle">Add New Card</h3>
+                    <button class="close-btn" id="closeCardModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="cardForm">
+                        <div class="form-group">
+                            <label for="cardFrontInput">Front (Question)</label>
+                            <textarea id="cardFrontInput" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardBackInput">Back (Answer)</label>
+                            <textarea id="cardBackInput" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelCard">Cancel</button>
+                    <button class="btn btn-primary" id="saveCard">Save Card</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deck Editor Page -->
+        <div id="deckEditor" class="page">
+            <div class="page-header">
+                <button class="btn btn-secondary" id="backToDashboard">← Back to Dashboard</button>
+                <h2 id="editorDeckName">Deck Editor</h2>
+                <button class="btn btn-primary" id="addCardBtn">+ Add Card</button>
+            </div>
+            
+            <div id="cardsList" class="cards-list">
+                <!-- Cards will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
