@@ -107,3 +107,5 @@ brainstack/
 5. Start studying!
 
 The app will automatically create the data directory and initialize with default settings.
+
+* App is running a Flask web server as an MVP. The project remains Python/OOP-driven with decks, cards, users, study sessions, and progress endpoints. *
