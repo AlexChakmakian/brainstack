@@ -1,0 +1,49 @@
+@startuml
+class Flashcard {
+    _generate_id()
+    record_study_result()
+    get_accuracy()
+    to_dict()
+    from_dict()
+        id
+    front
+    back
+    created_at
+    times_studied
+    correct_count
+    incorrect_count
+    __init__()
+}
+class Deck {
+    _generate_id()
+    add_card()
+    remove_card()
+    get_card()
+    get_total_cards()
+    get_study_stats()
+    to_dict()
+    from_dict()
+        id
+    name
+    description
+    created_at
+    cards : List[Flashcard] 
+    __init__(cards: List[Flashcard] )
+}
+class User {
+    _generate_id()
+    record_study_session()
+    get_overall_accuracy()
+    to_dict()
+    from_dict()
+        id
+    name
+    created_at
+    total_study_sessions
+    total_cards_studied
+    total_correct
+    total_incorrect
+    __init__()
+}
+Deck --> Flashcard
+@enduml
