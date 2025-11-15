@@ -15,7 +15,35 @@ class BrainStackApp {
     
     init() {
         this.setupEventListeners();
+        this.checkLogin();
         this.loadDashboard();
+    }
+    
+    async checkLogin() {
+        try {
+            const response = await fetch('/api/current-user');
+            if (!response.ok) {
+                window.location.href = '/login';
+                return;
+            }
+        } catch (error) {
+            window.location.href = '/login';
+        }
+    }
+    
+    toggleSettingsMenu() {
+        const dropdown = document.getElementById('settingsDropdown');
+        dropdown.classList.toggle('show');
+    }
+    
+    async logout() {
+        try {
+            await this.apiCall('/api/logout', 'POST');
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Logout failed:', error);
+            window.location.href = '/login';
+        }
     }
     
     setupEventListeners() {
@@ -45,6 +73,26 @@ class BrainStackApp {
         
         // Navigation
         document.getElementById('backToDashboard').addEventListener('click', () => this.showDashboard());
+        
+        // Settings menu
+        document.getElementById('settingsBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleSettingsMenu();
+        });
+        
+        document.getElementById('settingsDropdown').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            document.getElementById('settingsDropdown').classList.remove('show');
+        });
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            this.logout();
+        });
         
         // Close modals when clicking outside
         window.addEventListener('click', (e) => {
@@ -103,6 +151,11 @@ class BrainStackApp {
         try {
             const response = await fetch(endpoint, options);
             const result = await response.json();
+            
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
             
             if (!result.success) {
                 throw new Error(result.error || 'API call failed');

@@ -3,8 +3,9 @@ BrainStack - Flask Application
 Main entry point for the flashcard learning app
 """
 
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect
 import os
+from functools import wraps
 from storage import StorageManager
 from flashcard import Flashcard
 from deck import Deck
@@ -12,49 +13,83 @@ from user import User
 
 # Initialize Flask app
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # For session management
 
 # Initialize storage manager
 storage = StorageManager()
 
-# Global variables to cache data
-_cached_decks = None
-_cached_user = None
+
+def get_current_username():
+    """Get current username from session."""
+    return session.get('username')
 
 
-def get_decks():
-    """Get cached decks or load from storage."""
-    global _cached_decks
-    if _cached_decks is None:
-        _cached_decks = storage.load_decks()
-    return _cached_decks
-
-
-def get_user():
-    """Get cached user or load from storage."""
-    global _cached_user
-    if _cached_user is None:
-        _cached_user = storage.load_user()
-    return _cached_user
-
-
-def save_decks():
-    """Save decks to storage and update cache."""
-    global _cached_decks
-    if _cached_decks is not None:
-        storage.save_decks(_cached_decks)
-
-
-def save_user():
-    """Save user to storage and update cache."""
-    global _cached_user
-    if _cached_user is not None:
-        storage.save_user(_cached_user)
+def login_required(f):
+    """Decorator to require login."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not get_current_username():
+            return jsonify({'success': False, 'error': 'Not logged in'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @app.route('/')
 def index():
-    """Serve the main dashboard page."""
+    """Serve the main dashboard page or redirect to login."""
+    if not get_current_username():
+        return redirect('/login')
     return send_from_directory('static', 'index.html')
+
+
+@app.route('/login')
+def login_page():
+    """Serve the login page."""
+    if get_current_username():
+        return redirect('/')
+    return send_from_directory('static', 'login.html')
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    """Handle user login."""
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        
+        if not username:
+            return jsonify({'success': False, 'error': 'Username is required'}), 400
+        
+        # Create user if doesn't exist
+        user = storage.get_user(username)
+        if not user:
+            user = storage.create_user(username)
+        
+        session['username'] = username
+        return jsonify({'success': True, 'user': user.to_dict()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    """Handle user logout."""
+    session.pop('username', None)
+    return jsonify({'success': True})
+
+
+@app.route('/api/current-user', methods=['GET'])
+def get_current_user():
+    """Get current logged in user."""
+    username = get_current_username()
+    if not username:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    user = storage.get_user(username)
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    return jsonify({'success': True, 'user': user.to_dict()})
 
 
 @app.route('/static/<path:filename>')
@@ -66,10 +101,12 @@ def static_files(filename):
 # API Routes
 
 @app.route('/api/decks', methods=['GET'])
+@login_required
 def get_decks_api():
     """Get all decks."""
     try:
-        decks = get_decks()
+        username = get_current_username()
+        decks = storage.load_decks(username)
         return jsonify({
             'success': True,
             'decks': [deck.to_dict() for deck in decks]
@@ -82,9 +119,11 @@ def get_decks_api():
 
 
 @app.route('/api/decks', methods=['POST'])
+@login_required
 def create_deck():
     """Create a new deck."""
     try:
+        username = get_current_username()
         data = request.get_json()
         if not data or 'name' not in data:
             return jsonify({
@@ -97,9 +136,7 @@ def create_deck():
             description=data.get('description', '')
         )
         
-        decks = get_decks()
-        decks.append(deck)
-        save_decks()
+        storage.add_deck(username, deck)
         
         return jsonify({
             'success': True,
@@ -113,10 +150,12 @@ def create_deck():
 
 
 @app.route('/api/decks/<deck_id>', methods=['GET'])
+@login_required
 def get_deck(deck_id):
     """Get a specific deck with its cards."""
     try:
-        deck = storage.get_deck_by_id(deck_id)
+        username = get_current_username()
+        deck = storage.get_deck_by_id(username, deck_id)
         if not deck:
             return jsonify({
                 'success': False,
@@ -135,19 +174,17 @@ def get_deck(deck_id):
 
 
 @app.route('/api/decks/<deck_id>', methods=['DELETE'])
+@login_required
 def delete_deck(deck_id):
     """Delete a deck."""
     try:
-        success = storage.delete_deck(deck_id)
+        username = get_current_username()
+        success = storage.delete_deck(username, deck_id)
         if not success:
             return jsonify({
                 'success': False,
                 'error': 'Deck not found'
             }), 404
-        
-        # Update cache
-        global _cached_decks
-        _cached_decks = storage.load_decks()
         
         return jsonify({
             'success': True,
@@ -161,9 +198,11 @@ def delete_deck(deck_id):
 
 
 @app.route('/api/decks/<deck_id>/cards', methods=['POST'])
+@login_required
 def add_card_to_deck(deck_id):
     """Add a card to a deck."""
     try:
+        username = get_current_username()
         data = request.get_json()
         if not data or 'front' not in data or 'back' not in data:
             return jsonify({
@@ -172,17 +211,13 @@ def add_card_to_deck(deck_id):
             }), 400
         
         card = Flashcard(data['front'], data['back'])
-        success = storage.add_card_to_deck(deck_id, card)
+        success = storage.add_card_to_deck(username, deck_id, card)
         
         if not success:
             return jsonify({
                 'success': False,
                 'error': 'Deck not found'
             }), 404
-        
-        # Update cache
-        global _cached_decks
-        _cached_decks = storage.load_decks()
         
         return jsonify({
             'success': True,
@@ -196,15 +231,18 @@ def add_card_to_deck(deck_id):
 
 
 @app.route('/api/cards/<card_id>', methods=['DELETE'])
+@login_required
 def delete_card(card_id):
     """Delete a card from any deck."""
     try:
-        decks = get_decks()
+        username = get_current_username()
+        decks = storage.load_decks(username)
         card_found = False
         
         for deck in decks:
             if deck.remove_card(card_id):
                 card_found = True
+                storage.update_deck(username, deck)
                 break
         
         if not card_found:
@@ -212,8 +250,6 @@ def delete_card(card_id):
                 'success': False,
                 'error': 'Card not found'
             }), 404
-        
-        save_decks()
         
         return jsonify({
             'success': True,
@@ -227,9 +263,11 @@ def delete_card(card_id):
 
 
 @app.route('/api/study/<deck_id>', methods=['POST'])
+@login_required
 def record_study_result(deck_id):
     """Record study results for cards."""
     try:
+        username = get_current_username()
         data = request.get_json()
         if not data or 'results' not in data:
             return jsonify({
@@ -237,7 +275,7 @@ def record_study_result(deck_id):
                 'error': 'Study results are required'
             }), 400
         
-        deck = storage.get_deck_by_id(deck_id)
+        deck = storage.get_deck_by_id(username, deck_id)
         if not deck:
             return jsonify({
                 'success': False,
@@ -254,16 +292,16 @@ def record_study_result(deck_id):
                 card.record_study_result(is_correct)
         
         # Update deck in storage
-        storage.update_deck(deck)
+        storage.update_deck(username, deck)
         
         # Update user stats
-        user = get_user()
+        user = storage.get_user(username)
         total_cards = len(data['results'])
         correct_count = sum(1 for r in data['results'] if r.get('is_correct', False))
         incorrect_count = total_cards - correct_count
         
         user.record_study_session(total_cards, correct_count, incorrect_count)
-        save_user()
+        storage.save_user(username, user)
         
         return jsonify({
             'success': True,
@@ -277,11 +315,13 @@ def record_study_result(deck_id):
 
 
 @app.route('/api/progress', methods=['GET'])
+@login_required
 def get_progress():
     """Get user progress statistics."""
     try:
-        user = get_user()
-        decks = get_decks()
+        username = get_current_username()
+        user = storage.get_user(username)
+        decks = storage.load_decks(username)
         
         # Calculate overall stats
         total_decks = len(decks)
@@ -317,7 +357,7 @@ if __name__ == '__main__':
     # Create data directory if it doesn't exist
     os.makedirs('data', exist_ok=True)
     
-    # Initialize with some sample data if no data exists
+    # Initialize with empty users dict if no data exists
     if not os.path.exists('data/flashcards.json'):
         print("Creating initial data file...")
         storage.save_data(storage._get_default_data())
