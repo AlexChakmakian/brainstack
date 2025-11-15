@@ -6,7 +6,9 @@ Handles JSON file operations for saving and loading flashcard data
 import json
 import os
 from typing import List, Dict, Any
-from flashcard import Deck, Flashcard, User
+from flashcard import Flashcard
+from deck import Deck
+from user import User
 
 
 class StorageManager:
@@ -45,7 +47,6 @@ class StorageManager:
     def _get_default_data(self) -> Dict[str, Any]:
         """Get default data structure."""
         return {
-            'decks': [],
             'user': {
                 'id': 'default-user',
                 'name': 'Default User',
@@ -53,27 +54,21 @@ class StorageManager:
                 'total_study_sessions': 0,
                 'total_cards_studied': 0,
                 'total_correct': 0,
-                'total_incorrect': 0
+                'total_incorrect': 0,
+                'decks': []  # Decks are now part of user (composition)
             }
         }
     
     def load_decks(self) -> List[Deck]:
-        """Load all decks from storage."""
-        data = self.load_data()
-        decks = []
-        for deck_data in data.get('decks', []):
-            try:
-                deck = Deck.from_dict(deck_data)
-                decks.append(deck)
-            except Exception:
-                continue
-        return decks
+        """Load all decks from storage (from user's composition)."""
+        user = self.load_user()
+        return user.decks
     
     def save_decks(self, decks: List[Deck]) -> bool:
-        """Save all decks to storage."""
-        data = self.load_data()
-        data['decks'] = [deck.to_dict() for deck in decks]
-        return self.save_data(data)
+        """Save all decks to storage (to user's composition)."""
+        user = self.load_user()
+        user.decks = decks
+        return self.save_user(user)
     
     def load_user(self) -> User:
         """Load user data from storage."""
@@ -91,33 +86,32 @@ class StorageManager:
         return self.save_data(data)
     
     def get_deck_by_id(self, deck_id: str) -> Deck:
-        """Get a specific deck by ID."""
-        decks = self.load_decks()
-        for deck in decks:
-            if deck.id == deck_id:
-                return deck
-        return None
+        """Get a specific deck by ID from user's decks."""
+        user = self.load_user()
+        return user.get_deck(deck_id)
     
     def add_deck(self, deck: Deck) -> bool:
-        """Add a new deck to storage."""
-        decks = self.load_decks()
-        decks.append(deck)
-        return self.save_decks(decks)
+        """Add a new deck to user's collection."""
+        user = self.load_user()
+        user.add_deck(deck)
+        return self.save_user(user)
     
     def update_deck(self, deck: Deck) -> bool:
-        """Update an existing deck in storage."""
-        decks = self.load_decks()
-        for i, existing_deck in enumerate(decks):
+        """Update an existing deck in user's collection."""
+        user = self.load_user()
+        for i, existing_deck in enumerate(user.decks):
             if existing_deck.id == deck.id:
-                decks[i] = deck
-                return self.save_decks(decks)
+                user.decks[i] = deck
+                return self.save_user(user)
         return False
     
     def delete_deck(self, deck_id: str) -> bool:
-        """Delete a deck from storage."""
-        decks = self.load_decks()
-        decks = [deck for deck in decks if deck.id != deck_id]
-        return self.save_decks(decks)
+        """Delete a deck from user's collection."""
+        user = self.load_user()
+        success = user.remove_deck(deck_id)
+        if success:
+            return self.save_user(user)
+        return False
     
     def add_card_to_deck(self, deck_id: str, card: Flashcard) -> bool:
         """Add a card to a specific deck."""

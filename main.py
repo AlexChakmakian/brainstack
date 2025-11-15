@@ -6,7 +6,9 @@ Main entry point for the flashcard learning app
 from flask import Flask, request, jsonify, render_template, send_from_directory
 import os
 from storage import StorageManager
-from flashcard import Deck, Flashcard, User
+from flashcard import Flashcard
+from deck import Deck
+from user import User
 
 # Initialize Flask app
 app = Flask(__name__)
