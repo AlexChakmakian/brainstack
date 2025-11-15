@@ -18,9 +18,31 @@ class BrainStackApp {
     }
     
     init() {
+        this.initTheme();
         this.setupEventListeners();
         this.checkLogin();
         this.loadDashboard();
+    }
+    
+    initTheme() {
+        // Check localStorage for saved theme preference, default to dark
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+        } else {
+            document.body.classList.remove('light-mode');
+        }
+    }
+    
+    toggleTheme() {
+        const isLightMode = document.body.classList.contains('light-mode');
+        if (isLightMode) {
+            document.body.classList.remove('light-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.add('light-mode');
+            localStorage.setItem('theme', 'light');
+        }
     }
     
     async checkLogin() {
@@ -106,6 +128,11 @@ class BrainStackApp {
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
             this.logout();
+        });
+        
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            this.toggleTheme();
         });
         
         // Close modals when clicking outside

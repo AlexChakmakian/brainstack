@@ -1,5 +1,43 @@
 /* BrainStack - Modern Flashcard App Styles */
 
+:root {
+    /* Dark Theme (Default) */
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-mid: #16213e;
+    --bg-gradient-end: #0f3460;
+    --page-bg: #1e1e2e;
+    --card-bg: #2d2d44;
+    --card-bg-hover: #35354a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --input-bg: #2d2d44;
+    --input-bg-focus: #35354a;
+    --shadow: rgba(0, 0, 0, 0.5);
+    --shadow-light: rgba(0, 0, 0, 0.3);
+    --nav-active-bg: rgba(255, 255, 255, 0.95);
+    --nav-active-text: #1a1a2e;
+}
+
+body.light-mode {
+    /* Light Theme */
+    --bg-gradient-start: #667eea;
+    --bg-gradient-mid: #764ba2;
+    --bg-gradient-end: #764ba2;
+    --page-bg: #ffffff;
+    --card-bg: #f8f9fa;
+    --card-bg-hover: #e9ecef;
+    --text-primary: #333333;
+    --text-secondary: #6c757d;
+    --border-color: #e9ecef;
+    --input-bg: #ffffff;
+    --input-bg-focus: #f8f9fa;
+    --shadow: rgba(0, 0, 0, 0.2);
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --nav-active-bg: rgba(255, 255, 255, 0.9);
+    --nav-active-text: #333333;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -8,9 +46,10 @@
 
 body {
     font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
     min-height: 100vh;
-    color: #333;
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .top-bar {
@@ -19,6 +58,48 @@ body {
     right: 0;
     padding: 15px 20px;
     z-index: 1000;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1) rotate(15deg);
+}
+
+.theme-icon {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    width: 100%;
+    height: 100%;
+}
+
+body.light-mode .theme-icon::before {
+    content: '☀️';
+}
+
+body:not(.light-mode) .theme-icon::before {
+    content: '🌙';
 }
 
 .settings-menu {
@@ -50,12 +131,14 @@ body {
     position: absolute;
     top: 50px;
     right: 0;
-    background: white;
+    background: var(--page-bg);
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px var(--shadow);
     min-width: 150px;
     display: none;
     overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .settings-dropdown.show {
@@ -66,16 +149,16 @@ body {
     width: 100%;
     padding: 12px 20px;
     border: none;
-    background: white;
+    background: var(--page-bg);
     text-align: left;
     cursor: pointer;
     transition: background 0.2s;
     font-size: 14px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .dropdown-item:hover {
-    background: #f5f5f5;
+    background: var(--card-bg);
 }
 
 .container {
@@ -131,9 +214,10 @@ body {
 }
 
 .nav-btn.active {
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background: var(--nav-active-bg);
+    color: var(--nav-active-text);
+    box-shadow: 0 4px 15px var(--shadow);
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .nav-btn-premium {
@@ -153,11 +237,13 @@ body {
 /* Pages */
 .page {
     display: none;
-    background: white;
+    background: var(--page-bg);
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px var(--shadow);
     min-height: 500px;
+    border: 1px solid var(--border-color);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .page.active {
@@ -170,12 +256,14 @@ body {
     align-items: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
+    border-bottom: 2px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .page-header h2 {
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
+    transition: color 0.3s ease;
 }
 
 .page-title-premium {
@@ -205,18 +293,21 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.6);
 }
 
 .btn-secondary {
-    background: #f8f9fa;
-    color: #6c757d;
-    border: 1px solid #dee2e6;
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-    background: #e9ecef;
+    background: var(--card-bg-hover);
+    color: var(--text-primary);
     transform: translateY(-1px);
+    border-color: var(--border-color);
 }
 
 .btn-success {
@@ -252,30 +343,33 @@ body {
 }
 
 .deck-card {
-    background: #f8f9fa;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 20px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .deck-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
     border-color: #667eea;
+    background: var(--card-bg-hover);
 }
 
 .deck-card h3 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
     font-weight: 600;
+    transition: color 0.3s ease;
 }
 
 .deck-card p {
-    color: #6c757d;
+    color: var(--text-secondary);
     margin-bottom: 15px;
     font-size: 14px;
+    transition: color 0.3s ease;
 }
 
 .deck-stats {
@@ -283,7 +377,8 @@ body {
     justify-content: space-between;
     margin-bottom: 15px;
     font-size: 14px;
-    color: #6c757d;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .deck-actions {
@@ -299,7 +394,7 @@ body {
 }
 
 .study-card {
-    background: #f8f9fa;
+    background: var(--card-bg);
     border-radius: 15px;
     padding: 40px;
     margin-bottom: 30px;
@@ -307,13 +402,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
 .study-card:hover {
     border-color: #667eea;
-    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+    background: var(--card-bg-hover);
 }
 
 .card-side {
@@ -322,15 +418,17 @@ body {
 }
 
 .card-side h3 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 20px;
     font-size: 1.5rem;
+    transition: color 0.3s ease;
 }
 
 .card-side p {
-    color: #6c757d;
+    color: var(--text-secondary);
     font-size: 1.1rem;
     line-height: 1.6;
+    transition: color 0.3s ease;
 }
 
 .card-side.hidden {
@@ -362,16 +460,18 @@ body {
 }
 
 .stat-card {
-    background: #f8f9fa;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 20px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .stat-card h3 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 20px;
     font-weight: 600;
+    transition: color 0.3s ease;
 }
 
 .stat-item {
@@ -379,18 +479,21 @@ body {
     justify-content: space-between;
     margin-bottom: 15px;
     padding: 10px 0;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .stat-label {
-    color: #6c757d;
+    color: var(--text-secondary);
     font-weight: 500;
+    transition: color 0.3s ease;
 }
 
 .stat-value {
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
     font-size: 1.1rem;
+    transition: color 0.3s ease;
 }
 
 /* Modal */
@@ -402,19 +505,21 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0,0,0,0.7);
     backdrop-filter: blur(5px);
 }
 
 .modal-content {
-    background-color: white;
+    background-color: var(--page-bg);
     margin: 5% auto;
     padding: 0;
     border-radius: 15px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px var(--shadow);
+    border: 1px solid var(--border-color);
     animation: modalSlideIn 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes modalSlideIn {
@@ -430,15 +535,17 @@ body {
 
 .modal-header {
     padding: 20px 30px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: border-color 0.3s ease;
 }
 
 .modal-header h3 {
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
+    transition: color 0.3s ease;
 }
 
 .close-btn {
@@ -446,7 +553,7 @@ body {
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #6c757d;
+    color: var(--text-secondary);
     padding: 0;
     width: 30px;
     height: 30px;
@@ -458,8 +565,8 @@ body {
 }
 
 .close-btn:hover {
-    background: #f8f9fa;
-    color: #333;
+    background: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .modal-body {
@@ -468,10 +575,11 @@ body {
 
 .modal-footer {
     padding: 20px 30px;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--border-color);
     display: flex;
     gap: 15px;
     justify-content: flex-end;
+    transition: border-color 0.3s ease;
 }
 
 /* Forms */
@@ -482,8 +590,9 @@ body {
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 500;
+    transition: color 0.3s ease;
 }
 
 .form-group input,
@@ -491,10 +600,12 @@ body {
 .form-group select {
     width: 100%;
     padding: 12px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    transition: border-color 0.3s ease;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
 }
 
 .form-group input:focus,
@@ -502,7 +613,8 @@ body {
 .form-group select:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    background: var(--input-bg-focus);
 }
 
 .form-group textarea {
@@ -517,16 +629,17 @@ body {
 }
 
 .card-item {
-    background: #f8f9fa;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 20px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
 .card-item:hover {
     border-color: #667eea;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    background: var(--card-bg-hover);
 }
 
 .card-content {
@@ -553,11 +666,18 @@ body {
 /* Select */
 .select {
     padding: 10px 15px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: white;
+    background: var(--input-bg);
+    color: var(--text-primary);
     font-size: 14px;
     min-width: 200px;
+    transition: all 0.3s ease;
+}
+
+.select:focus {
+    border-color: #667eea;
+    background: var(--input-bg-focus);
 }
 
 /* Utility Classes */
@@ -638,9 +758,11 @@ body {
 .test-progress {
     text-align: center;
     padding: 10px;
-    background: #f5f5f5;
+    background: var(--card-bg);
     border-radius: 8px;
     font-weight: 500;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
 }
 
 .test-content {
@@ -650,11 +772,13 @@ body {
 }
 
 .test-question-card {
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow-light);
     margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .question-header {
@@ -663,8 +787,9 @@ body {
 
 .question-header h3 {
     font-size: 1.3em;
-    color: #333;
+    color: var(--text-primary);
     line-height: 1.6;
+    transition: color 0.3s ease;
 }
 
 .question-body {
@@ -674,22 +799,26 @@ body {
 .answer-input {
     width: 100%;
     padding: 15px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 1em;
     font-family: inherit;
     resize: vertical;
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
+    background: var(--input-bg);
+    color: var(--text-primary);
 }
 
 .answer-input:focus {
     outline: none;
     border-color: #4CAF50;
+    background: var(--input-bg-focus);
 }
 
 .answer-input:disabled {
-    background-color: #f5f5f5;
+    background-color: var(--input-bg);
     cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .question-feedback {
@@ -728,9 +857,11 @@ body {
 .test-complete {
     text-align: center;
     padding: 40px;
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow-light);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .test-complete h2 {
@@ -744,15 +875,18 @@ body {
 
 .score-display h3 {
     font-size: 2.5em;
-    color: #333;
+    color: var(--text-primary);
     margin: 20px 0;
+    transition: color 0.3s ease;
 }
 
 .test-summary {
     margin: 30px 0;
     padding: 20px;
-    background: #f5f5f5;
+    background: var(--input-bg);
     border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .summary-stats {
@@ -764,6 +898,8 @@ body {
 .summary-stats p {
     margin: 10px 0;
     font-size: 1.1em;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 @media (max-width: 768px) {
