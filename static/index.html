@@ -6,6 +6,7 @@
     <title>BrainStack - Flashcard Learning App</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="top-bar">
@@ -19,14 +20,14 @@
     <div class="container">
         <header class="header">
             <h1>🧠 BrainStack</h1>
-            <p>Master your knowledge with flashcards</p>
+            <p>AI-powered learning, reimagined</p>
         </header>
 
         <!-- Navigation -->
         <nav class="nav">
-            <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+            <button class="nav-btn active" data-page="dashboard">My Decks</button>
             <button class="nav-btn" data-page="study">Study</button>
-            <button class="nav-btn" data-page="practice-tests">AI Practice Tests</button>
+            <button class="nav-btn nav-btn-premium" data-page="practice-tests">AI Practice Tests</button>
             <button class="nav-btn" data-page="progress">Progress</button>
         </nav>
 
@@ -78,7 +79,7 @@
         <!-- AI Practice Tests Page -->
         <div id="practice-tests" class="page">
             <div class="page-header">
-                <h2>AI Practice Tests</h2>
+                <h2 class="page-title-premium">✨ AI Practice Tests</h2>
                 <button class="btn btn-primary" id="createTestBtn">+ Create New Test</button>
             </div>
             

@@ -219,8 +219,8 @@ class BrainStackApp {
                     <span>Created: ${new Date(deck.created_at).toLocaleDateString()}</span>
                 </div>
                 <div class="deck-actions">
-                    <button class="btn btn-primary btn-small" onclick="app.editDeck('${deck.id}')">Edit</button>
-                    <button class="btn btn-secondary btn-small" onclick="app.deleteDeck('${deck.id}')">Delete</button>
+                    <button class="btn btn-primary btn-small" onclick="app.editDeck('${deck.id}')">Add/Edit 🃏</button>
+                    <button class="btn btn-secondary btn-small" onclick="app.deleteDeck('${deck.id}')">Delete deck</button>
                 </div>
             </div>
         `).join('');
