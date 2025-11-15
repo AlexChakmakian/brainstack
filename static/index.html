@@ -26,6 +26,7 @@
         <nav class="nav">
             <button class="nav-btn active" data-page="dashboard">Dashboard</button>
             <button class="nav-btn" data-page="study">Study</button>
+            <button class="nav-btn" data-page="practice-tests">AI Practice Tests</button>
             <button class="nav-btn" data-page="progress">Progress</button>
         </nav>
 
@@ -70,6 +71,58 @@
                 <div class="study-feedback">
                     <button class="btn btn-success" id="correctBtn" disabled>✓ Correct</button>
                     <button class="btn btn-danger" id="incorrectBtn" disabled>✗ Incorrect</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Practice Tests Page -->
+        <div id="practice-tests" class="page">
+            <div class="page-header">
+                <h2>AI Practice Tests</h2>
+                <button class="btn btn-primary" id="createTestBtn">+ Create New Test</button>
+            </div>
+            
+            <div id="practiceTestsList" class="decks-grid">
+                <!-- Practice tests will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Practice Test Taking Page -->
+        <div id="practiceTestView" class="page">
+            <div class="page-header">
+                <button class="btn btn-secondary" id="backToTestsBtn">← Back to Tests</button>
+                <h2 id="testTitle">Practice Test</h2>
+                <div id="testProgress" class="test-progress">
+                    <span id="testProgressText">Question 0 of 0</span>
+                </div>
+            </div>
+            
+            <div id="testContent" class="test-content">
+                <div class="test-question-card">
+                    <div class="question-header">
+                        <h3 id="questionText">Loading question...</h3>
+                    </div>
+                    <div class="question-body">
+                        <textarea id="answerInput" class="answer-input" placeholder="Type your answer here..." rows="4"></textarea>
+                    </div>
+                    <div class="question-feedback" id="questionFeedback" style="display: none;">
+                        <div id="feedbackContent"></div>
+                    </div>
+                    <div class="question-actions">
+                        <button class="btn btn-primary" id="submitAnswerBtn">Submit Answer</button>
+                        <button class="btn btn-secondary" id="nextQuestionBtn" style="display: none;">Next Question</button>
+                    </div>
+                </div>
+                
+                <div id="testComplete" class="test-complete" style="display: none;">
+                    <h2>Test Complete!</h2>
+                    <div class="score-display">
+                        <h3 id="finalScore">Score: 0%</h3>
+                    </div>
+                    <div class="test-summary" id="testSummary">
+                        <!-- Summary will be shown here -->
+                    </div>
+                    <button class="btn btn-primary" id="finishTestBtn">Finish</button>
                 </div>
             </div>
         </div>
@@ -130,6 +183,35 @@
                 <div class="modal-footer">
                     <button class="btn btn-secondary" id="cancelDeck">Cancel</button>
                     <button class="btn btn-primary" id="saveDeck">Save Deck</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Practice Test Modal -->
+        <div id="testModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create AI Practice Test</h3>
+                    <button class="close-btn" id="closeTestModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="testForm">
+                        <div class="form-group">
+                            <label for="testDeckSelect">Select Deck</label>
+                            <select id="testDeckSelect" class="select" required>
+                                <option value="">Choose a deck...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="numQuestions">Number of Questions</label>
+                            <input type="number" id="numQuestions" min="1" max="20" value="10" required>
+                            <small>AI will generate questions based on your flashcards</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelTest">Cancel</button>
+                    <button class="btn btn-primary" id="createTest">Create Test</button>
                 </div>
             </div>
         </div>

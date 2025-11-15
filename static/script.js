@@ -10,6 +10,10 @@ class BrainStackApp {
         this.studyResults = [];
         this.isCardFlipped = false;
         
+        // Practice test state
+        this.currentTest = null;
+        this.currentQuestionIndex = 0;
+        
         this.init();
     }
     
@@ -73,6 +77,16 @@ class BrainStackApp {
         
         // Navigation
         document.getElementById('backToDashboard').addEventListener('click', () => this.showDashboard());
+        document.getElementById('backToTestsBtn').addEventListener('click', () => this.showPracticeTestsPage());
+        
+        // Practice Tests
+        document.getElementById('createTestBtn').addEventListener('click', () => this.showTestModal());
+        document.getElementById('createTest').addEventListener('click', () => this.createPracticeTest());
+        document.getElementById('cancelTest').addEventListener('click', () => this.hideTestModal());
+        document.getElementById('closeTestModal').addEventListener('click', () => this.hideTestModal());
+        document.getElementById('submitAnswerBtn').addEventListener('click', () => this.submitTestAnswer());
+        document.getElementById('nextQuestionBtn').addEventListener('click', () => this.nextTestQuestion());
+        document.getElementById('finishTestBtn').addEventListener('click', () => this.finishTest());
         
         // Settings menu
         document.getElementById('settingsBtn').addEventListener('click', (e) => {
@@ -99,6 +113,7 @@ class BrainStackApp {
             if (e.target.classList.contains('modal')) {
                 this.hideDeckModal();
                 this.hideCardModal();
+                this.hideTestModal();
             }
         });
     }
@@ -124,6 +139,9 @@ class BrainStackApp {
                 break;
             case 'study':
                 this.loadStudyPage();
+                break;
+            case 'practice-tests':
+                this.loadPracticeTestsPage();
                 break;
             case 'progress':
                 this.loadProgressPage();
@@ -518,6 +536,312 @@ class BrainStackApp {
                 <span class="stat-value">${deck.total_cards} cards, ${deck.accuracy}% accuracy</span>
             </div>
         `).join('');
+    }
+    
+    // Practice Test Methods
+    async loadPracticeTestsPage() {
+        try {
+            const result = await this.apiCall('/api/practice-tests');
+            this.displayPracticeTests(result.practice_tests);
+        } catch (error) {
+            console.error('Failed to load practice tests:', error);
+        }
+    }
+    
+    showPracticeTestsPage() {
+        this.switchPage('practice-tests');
+    }
+    
+    displayPracticeTests(tests) {
+        const container = document.getElementById('practiceTestsList');
+        
+        if (tests.length === 0) {
+            container.innerHTML = `
+                <div class="text-center" style="grid-column: 1 / -1; padding: 40px;">
+                    <h3>No practice tests yet</h3>
+                    <p>Create your first AI practice test to get started!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = tests.map(test => {
+            const progress = test.is_completed ? 
+                `Score: ${test.score ? test.score.toFixed(1) : 0}%` :
+                `${test.questions.filter(q => q.user_answer !== null).length}/${test.questions.length} answered`;
+            
+            return `
+                <div class="deck-card" data-test-id="${test.id}">
+                    <h3>${test.deck_name}</h3>
+                    <p>Practice Test</p>
+                    <div class="deck-stats">
+                        <span>Questions: ${test.questions.length}</span>
+                        <span>${progress}</span>
+                    </div>
+                    <div class="deck-stats">
+                        <span>Created: ${new Date(test.created_at).toLocaleDateString()}</span>
+                        ${test.completed_at ? `<span>Completed: ${new Date(test.completed_at).toLocaleDateString()}</span>` : ''}
+                    </div>
+                    <div class="deck-actions">
+                        ${!test.is_completed ? 
+                            `<button class="btn btn-primary btn-small" onclick="app.startTest('${test.id}')">Continue Test</button>` :
+                            `<button class="btn btn-secondary btn-small" onclick="app.viewTestResults('${test.id}')">View Results</button>`
+                        }
+                        <button class="btn btn-danger btn-small" onclick="app.deleteTest('${test.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    async showTestModal() {
+        try {
+            // Load decks for selection
+            const result = await this.apiCall('/api/decks');
+            const select = document.getElementById('testDeckSelect');
+            select.innerHTML = '<option value="">Choose a deck...</option>';
+            
+            result.decks.forEach(deck => {
+                if (deck.cards.length > 0) {
+                    const option = document.createElement('option');
+                    option.value = deck.id;
+                    option.textContent = `${deck.name} (${deck.cards.length} cards)`;
+                    select.appendChild(option);
+                }
+            });
+            
+            document.getElementById('testModal').style.display = 'block';
+        } catch (error) {
+            console.error('Failed to load decks:', error);
+            alert('Failed to load decks. Please try again.');
+        }
+    }
+    
+    hideTestModal() {
+        document.getElementById('testModal').style.display = 'none';
+    }
+    
+    async createPracticeTest() {
+        const deckId = document.getElementById('testDeckSelect').value;
+        const numQuestions = parseInt(document.getElementById('numQuestions').value);
+        
+        if (!deckId) {
+            alert('Please select a deck');
+            return;
+        }
+        
+        console.log('Creating practice test with:', { deckId, numQuestions });
+        
+        try {
+            const result = await this.apiCall('/api/practice-tests', 'POST', {
+                deck_id: deckId,
+                num_questions: numQuestions
+            });
+            
+            console.log('Practice test created:', result);
+            this.hideTestModal();
+            this.startTest(result.practice_test.id);
+        } catch (error) {
+            console.error('Failed to create practice test:', error);
+            alert(`Failed to create practice test: ${error.message}`);
+        }
+    }
+    
+    async startTest(testId) {
+        try {
+            const result = await this.apiCall(`/api/practice-tests/${testId}`);
+            this.currentTest = result.practice_test;
+            this.currentQuestionIndex = 0;
+            
+            // Find first unanswered question
+            for (let i = 0; i < this.currentTest.questions.length; i++) {
+                if (this.currentTest.questions[i].user_answer === null) {
+                    this.currentQuestionIndex = i;
+                    break;
+                }
+            }
+            
+            this.showTestView();
+        } catch (error) {
+            console.error('Failed to load test:', error);
+            alert('Failed to load test. Please try again.');
+        }
+    }
+    
+    showTestView() {
+        // Hide all pages and show test view
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById('practiceTestView').classList.add('active');
+        
+        this.displayCurrentQuestion();
+    }
+    
+    displayCurrentQuestion() {
+        if (!this.currentTest || this.currentTest.is_completed) {
+            this.showTestComplete();
+            return;
+        }
+        
+        const question = this.currentTest.questions[this.currentQuestionIndex];
+        if (!question) {
+            this.showTestComplete();
+            return;
+        }
+        
+        document.getElementById('testTitle').textContent = `Practice Test: ${this.currentTest.deck_name}`;
+        document.getElementById('testProgressText').textContent = 
+            `Question ${this.currentQuestionIndex + 1} of ${this.currentTest.questions.length}`;
+        document.getElementById('questionText').textContent = question.question;
+        document.getElementById('answerInput').value = question.user_answer || '';
+        document.getElementById('answerInput').disabled = question.user_answer !== null;
+        
+        // Show/hide feedback
+        const feedbackDiv = document.getElementById('questionFeedback');
+        const feedbackContent = document.getElementById('feedbackContent');
+        
+        if (question.user_answer !== null) {
+            feedbackDiv.style.display = 'block';
+            const isCorrect = question.is_correct;
+            feedbackDiv.className = `question-feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedbackContent.innerHTML = `
+                <p><strong>Your answer:</strong> ${question.user_answer}</p>
+                <p><strong>Correct answer:</strong> ${question.correct_answer}</p>
+                <p class="feedback-message">${isCorrect ? '✓ Correct!' : '✗ Incorrect'}</p>
+            `;
+            document.getElementById('submitAnswerBtn').style.display = 'none';
+            document.getElementById('nextQuestionBtn').style.display = 'inline-block';
+        } else {
+            feedbackDiv.style.display = 'none';
+            document.getElementById('submitAnswerBtn').style.display = 'inline-block';
+            document.getElementById('nextQuestionBtn').style.display = 'none';
+        }
+        
+        // Hide complete section
+        document.getElementById('testComplete').style.display = 'none';
+        document.querySelector('.test-question-card').style.display = 'block';
+    }
+    
+    async submitTestAnswer() {
+        const answer = document.getElementById('answerInput').value.trim();
+        if (!answer) {
+            alert('Please enter an answer');
+            return;
+        }
+        
+        const question = this.currentTest.questions[this.currentQuestionIndex];
+        
+        try {
+            const result = await this.apiCall(
+                `/api/practice-tests/${this.currentTest.id}/submit-answer`,
+                'POST',
+                {
+                    question_id: question.id,
+                    answer: answer
+                }
+            );
+            
+            // Update local test state
+            question.user_answer = answer;
+            question.is_correct = result.is_correct;
+            
+            // Show feedback
+            this.displayCurrentQuestion();
+        } catch (error) {
+            console.error('Failed to submit answer:', error);
+            alert('Failed to submit answer. Please try again.');
+        }
+    }
+    
+    nextTestQuestion() {
+        this.currentQuestionIndex++;
+        
+        // Check if all questions are answered
+        const allAnswered = this.currentTest.questions.every(q => q.user_answer !== null);
+        
+        if (this.currentQuestionIndex >= this.currentTest.questions.length || allAnswered) {
+            this.completeTest();
+        } else {
+            // Find next unanswered question
+            while (this.currentQuestionIndex < this.currentTest.questions.length) {
+                if (this.currentTest.questions[this.currentQuestionIndex].user_answer === null) {
+                    break;
+                }
+                this.currentQuestionIndex++;
+            }
+            
+            if (this.currentQuestionIndex >= this.currentTest.questions.length) {
+                this.completeTest();
+            } else {
+                this.displayCurrentQuestion();
+            }
+        }
+    }
+    
+    async completeTest() {
+        try {
+            const result = await this.apiCall(
+                `/api/practice-tests/${this.currentTest.id}/complete`,
+                'POST'
+            );
+            
+            this.currentTest = result.practice_test;
+            this.showTestComplete();
+        } catch (error) {
+            console.error('Failed to complete test:', error);
+            // Still show complete screen with calculated score
+            this.showTestComplete();
+        }
+    }
+    
+    showTestComplete() {
+        document.getElementById('testComplete').style.display = 'block';
+        document.querySelector('.test-question-card').style.display = 'none';
+        
+        const score = this.currentTest.score || 0;
+        document.getElementById('finalScore').textContent = `Score: ${score.toFixed(1)}%`;
+        
+        // Show summary
+        const summary = document.getElementById('testSummary');
+        const correct = this.currentTest.questions.filter(q => q.is_correct === true).length;
+        const incorrect = this.currentTest.questions.filter(q => q.is_correct === false).length;
+        const total = this.currentTest.questions.length;
+        
+        summary.innerHTML = `
+            <div class="summary-stats">
+                <p><strong>Total Questions:</strong> ${total}</p>
+                <p><strong>Correct:</strong> ${correct}</p>
+                <p><strong>Incorrect:</strong> ${incorrect}</p>
+            </div>
+        `;
+    }
+    
+    finishTest() {
+        this.showPracticeTestsPage();
+        this.currentTest = null;
+        this.currentQuestionIndex = 0;
+    }
+    
+    async viewTestResults(testId) {
+        await this.startTest(testId);
+        // If test is completed, show results immediately
+        if (this.currentTest && this.currentTest.is_completed) {
+            this.showTestComplete();
+        }
+    }
+    
+    async deleteTest(testId) {
+        if (!confirm('Are you sure you want to delete this practice test?')) {
+            return;
+        }
+        
+        try {
+            await this.apiCall(`/api/practice-tests/${testId}`, 'DELETE');
+            this.loadPracticeTestsPage();
+        } catch (error) {
+            console.error('Failed to delete test:', error);
+        }
     }
 }
 

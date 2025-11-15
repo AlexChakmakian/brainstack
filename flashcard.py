@@ -3,9 +3,9 @@ BrainStack - Flashcard Class
 Represents a single flashcard with front and back content.
 """
 
-import json
+import uuid
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
 
 class Flashcard:
@@ -30,7 +30,6 @@ class Flashcard:
     
     def _generate_id(self) -> str:
         """Generate a unique ID for the flashcard."""
-        import uuid
         return str(uuid.uuid4())
     
     def record_study_result(self, is_correct: bool):

@@ -3,10 +3,11 @@ BrainStack - User Class
 Represents a user with study progress tracking.
 """
 
-import json
+import uuid
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from deck import Deck
+from practice_test import PracticeTest
 
 
 class User:
@@ -29,10 +30,11 @@ class User:
         self.total_incorrect = 0
         # User has multiple (1 or more) Decks
         self.decks: List[Deck] = []
+        # User has multiple (0 or more) PracticeTests
+        self.practice_tests: List[PracticeTest] = []
     
     def _generate_id(self) -> str:
         """Generate a unique ID for the user."""
-        import uuid
         return str(uuid.uuid4())
     
     def record_study_session(self, cards_studied: int, correct: int, incorrect: int):
@@ -63,14 +65,32 @@ class User:
     
     def get_deck(self, deck_id: str) -> Optional[Deck]:
         """Get a deck by ID from the user's collection."""
-        for deck in self.decks:
-            if deck.id == deck_id:
-                return deck
-        return None
+        return next((deck for deck in self.decks if deck.id == deck_id), None)
     
     def get_total_decks(self) -> int:
         """Get total number of decks owned by the user."""
         return len(self.decks)
+    
+    # Composition methods: User manages its PracticeTests
+    def add_practice_test(self, practice_test: PracticeTest) -> None:
+        """Add a practice test to the user's collection."""
+        self.practice_tests.append(practice_test)
+    
+    def remove_practice_test(self, test_id: str) -> bool:
+        """Remove a practice test from the user's collection by ID."""
+        for i, test in enumerate(self.practice_tests):
+            if test.id == test_id:
+                del self.practice_tests[i]
+                return True
+        return False
+    
+    def get_practice_test(self, test_id: str) -> Optional[PracticeTest]:
+        """Get a practice test by ID from the user's collection."""
+        return next((test for test in self.practice_tests if test.id == test_id), None)
+    
+    def get_total_practice_tests(self) -> int:
+        """Get total number of practice tests owned by the user."""
+        return len(self.practice_tests)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert user to dictionary for JSON serialization."""
@@ -82,7 +102,8 @@ class User:
             'total_cards_studied': self.total_cards_studied,
             'total_correct': self.total_correct,
             'total_incorrect': self.total_incorrect,
-            'decks': [deck.to_dict() for deck in self.decks]  # Serialize composed decks
+            'decks': [deck.to_dict() for deck in self.decks],  # Serialize composed decks
+            'practice_tests': [test.to_dict() for test in self.practice_tests]  # Serialize composed practice tests
         }
     
     @classmethod
@@ -96,5 +117,10 @@ class User:
         user.total_incorrect = data.get('total_incorrect', 0)
         # Deserialize composed decks
         user.decks = [Deck.from_dict(deck_data) for deck_data in data.get('decks', [])]
+        # Deserialize composed practice tests
+        user.practice_tests = [
+            PracticeTest.from_dict(test_data) 
+            for test_data in data.get('practice_tests', [])
+        ]
         return user
 

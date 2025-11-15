@@ -3,7 +3,7 @@ BrainStack - Deck Class
 Represents a collection of flashcards.
 """
 
-import json
+import uuid
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from flashcard import Flashcard
@@ -29,7 +29,6 @@ class Deck:
     
     def _generate_id(self) -> str:
         """Generate a unique ID for the deck."""
-        import uuid
         return str(uuid.uuid4())
     
     def add_card(self, front: str, back: str) -> Flashcard:
@@ -48,10 +47,7 @@ class Deck:
     
     def get_card(self, card_id: str) -> Optional[Flashcard]:
         """Get a card by ID."""
-        for card in self.cards:
-            if card.id == card_id:
-                return card
-        return None
+        return next((card for card in self.cards if card.id == card_id), None)
     
     def get_total_cards(self) -> int:
         """Get total number of cards in the deck."""

@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from flashcard import Flashcard
 from deck import Deck
 from user import User
+from practice_test import PracticeTest
 
 
 class StorageManager:
@@ -131,4 +132,44 @@ class StorageManager:
         if deck:
             deck.add_card(card.front, card.back)
             return self.update_deck(username, deck)
+        return False
+    
+    # Practice Test Management Methods
+    def load_practice_tests(self, username: str) -> List[PracticeTest]:
+        """Load all practice tests from storage (from user's composition)."""
+        user = self.get_user(username)
+        return user.practice_tests if user else []
+    
+    def get_practice_test_by_id(self, username: str, test_id: str) -> PracticeTest:
+        """Get a specific practice test by ID from user's tests."""
+        user = self.get_user(username)
+        return user.get_practice_test(test_id) if user else None
+    
+    def add_practice_test(self, username: str, practice_test: PracticeTest) -> bool:
+        """Add a new practice test to user's collection."""
+        user = self.get_user(username)
+        if not user:
+            return False
+        user.add_practice_test(practice_test)
+        return self.save_user(username, user)
+    
+    def update_practice_test(self, username: str, practice_test: PracticeTest) -> bool:
+        """Update an existing practice test in user's collection."""
+        user = self.get_user(username)
+        if not user:
+            return False
+        for i, existing_test in enumerate(user.practice_tests):
+            if existing_test.id == practice_test.id:
+                user.practice_tests[i] = practice_test
+                return self.save_user(username, user)
+        return False
+    
+    def delete_practice_test(self, username: str, test_id: str) -> bool:
+        """Delete a practice test from user's collection."""
+        user = self.get_user(username)
+        if not user:
+            return False
+        success = user.remove_practice_test(test_id)
+        if success:
+            return self.save_user(username, user)
         return False
