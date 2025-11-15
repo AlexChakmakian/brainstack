@@ -4,6 +4,8 @@ Represents a single question in a practice test.
 """
 
 import uuid
+import re
+from difflib import SequenceMatcher
 from typing import Optional, Dict, Any
 
 
@@ -36,16 +38,19 @@ class PracticeTestQuestion:
     def submit_answer(self, user_answer: str) -> bool:
         """
         Submit an answer to this question.
-        
-        Args:
-            user_answer: The user's answer
-            
-        Returns:
-            True if correct, False otherwise
+        Uses fuzzy matching - if similarity is >= 85%, marks as correct.
+        Allows for minor typos, missing spaces, or small differences.
         """
         self.user_answer = user_answer
-        # Simple comparison (could be made more sophisticated)
-        self.is_correct = user_answer.strip().lower() == self.correct_answer.strip().lower()
+        
+        # Normalize: lowercase, remove extra whitespace
+        normalize = lambda t: re.sub(r'\s+', ' ', t.strip().lower())
+        user_norm = normalize(user_answer)
+        correct_norm = normalize(self.correct_answer)
+        
+        # Check exact match or 85%+ similarity
+        self.is_correct = (user_norm == correct_norm or 
+                          SequenceMatcher(None, user_norm, correct_norm).ratio() >= 0.85)
         return self.is_correct
     
     def to_dict(self) -> Dict[str, Any]:
