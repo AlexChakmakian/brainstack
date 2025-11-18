@@ -76,6 +76,16 @@
             text-align: center;
             display: none;
         }
+        .toggle-link {
+            text-align: center;
+            margin-top: 15px;
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .toggle-link:hover {
+            color: #5568d3;
+        }
     </style>
 </head>
 <body>
@@ -99,21 +109,50 @@
     <div class="login-container">
         <div class="login-box">
             <h1>🧠 BrainStack</h1>
-            <p>Enter your username to continue</p>
-            <form id="loginForm">
+            <p id="formDescription">Enter your username and password to continue</p>
+            <form id="authForm">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" required autofocus>
                 </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
                 <div class="error-message" id="errorMessage"></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">Login</button>
             </form>
+            <div class="toggle-link" id="toggleLink">Don't have an account? Create one</div>
         </div>
     </div>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        let isLoginMode = true;
+        
+        const form = document.getElementById('authForm');
+        const toggleLink = document.getElementById('toggleLink');
+        const submitBtn = document.getElementById('submitBtn');
+        const formDescription = document.getElementById('formDescription');
+        
+        toggleLink.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            form.reset();
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            if (isLoginMode) {
+                formDescription.textContent = 'Enter your username and password to continue';
+                submitBtn.textContent = 'Login';
+                toggleLink.textContent = "Don't have an account? Create one";
+            } else {
+                formDescription.textContent = 'Create a new account';
+                submitBtn.textContent = 'Create Account';
+                toggleLink.textContent = 'Already have an account? Login';
+            }
+        });
+        
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMessage');
             
             if (!username) {
@@ -122,11 +161,18 @@
                 return;
             }
             
+            if (!password) {
+                errorMsg.textContent = 'Please enter a password';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
             try {
-                const response = await fetch('/api/login', {
+                const endpoint = isLoginMode ? '/api/login' : '/api/register';
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username })
+                    body: JSON.stringify({ username, password })
                 });
                 
                 const result = await response.json();
@@ -134,7 +180,7 @@
                 if (result.success) {
                     window.location.href = '/';
                 } else {
-                    errorMsg.textContent = result.error || 'Login failed';
+                    errorMsg.textContent = result.error || (isLoginMode ? 'Login failed' : 'Registration failed');
                     errorMsg.style.display = 'block';
                 }
             } catch (error) {

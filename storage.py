@@ -61,9 +61,10 @@ class StorageManager:
                 return User(name=username)
         return None
     
-    def create_user(self, username: str) -> User:
-        """Create a new user."""
+    def create_user(self, username: str, password: str) -> User:
+        """Create a new user with password."""
         user = User(name=username)
+        user.set_password(password)
         self.save_user(username, user)
         return user
     

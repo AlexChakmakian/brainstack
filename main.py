@@ -63,20 +63,50 @@ def login_page():
     return send_from_directory('static', 'login.html')
 
 
+@app.route('/api/register', methods=['POST'])
+def register():
+    """Handle user registration."""
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+        
+        if not username or not password:
+            return jsonify({'success': False, 'error': 'Username and password are required'}), 400
+        
+        if storage.user_exists(username):
+            return jsonify({'success': False, 'error': 'Username already exists'}), 400
+        
+        user = storage.create_user(username, password)
+        session['username'] = username
+        return jsonify({'success': True, 'user': user.to_dict()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/login', methods=['POST'])
 def login():
     """Handle user login."""
     try:
         data = request.get_json()
         username = data.get('username', '').strip()
+        password = data.get('password', '')
         
         if not username:
             return jsonify({'success': False, 'error': 'Username is required'}), 400
         
-        # Create user if doesn't exist
+        if not password:
+            return jsonify({'success': False, 'error': 'Password is required'}), 400
+        
+        # Get user if exists
         user = storage.get_user(username)
+        
         if not user:
-            user = storage.create_user(username)
+            return jsonify({'success': False, 'error': 'Invalid username or password'}), 401
+        
+        # Verify password
+        if not user.password_hash or not user.check_password(password):
+            return jsonify({'success': False, 'error': 'Invalid username or password'}), 401
         
         session['username'] = username
         return jsonify({'success': True, 'user': user.to_dict()})
